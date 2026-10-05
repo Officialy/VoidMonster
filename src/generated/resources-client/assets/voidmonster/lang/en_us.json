@@ -1,0 +1,5 @@
+{
+  "death.attack.voidmonster.ghost": "%1$s was expelled by %2$s",
+  "death.attack.voidmonster.ghost.player": "%1$s was expelled by %2$s",
+  "entity.voidmonster.void_monster": "Void Monster"
+}

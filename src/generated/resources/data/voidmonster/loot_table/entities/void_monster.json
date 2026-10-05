@@ -1,0 +1,245 @@
+{
+  "type": "minecraft:entity",
+  "pools": [
+    {
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "condition": {
+            "type": "voidmonster:difficulty",
+            "minimum": 0.8
+          },
+          "modifier": {
+            "type": "minecraft:set_count",
+            "count": {
+              "type": "voidmonster:difficulty_count",
+              "max": 8,
+              "min": 2
+            }
+          },
+          "name": "minecraft:diamond"
+        }
+      ],
+      "rolls": 1
+    },
+    {
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "condition": {
+            "type": "voidmonster:difficulty",
+            "minimum": 0.6
+          },
+          "modifier": {
+            "type": "minecraft:set_count",
+            "count": {
+              "type": "voidmonster:difficulty_count",
+              "max": 1,
+              "min": 1
+            }
+          },
+          "name": "minecraft:ghast_tear"
+        }
+      ],
+      "rolls": 1
+    },
+    {
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "condition": {
+            "type": "voidmonster:difficulty",
+            "minimum": 0.0
+          },
+          "modifier": {
+            "type": "minecraft:set_count",
+            "count": {
+              "type": "voidmonster:difficulty_count",
+              "max": 5,
+              "min": 2
+            }
+          },
+          "name": "minecraft:glistering_melon_slice"
+        }
+      ],
+      "rolls": 1
+    },
+    {
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "condition": {
+            "type": "voidmonster:difficulty",
+            "minimum": 0.4
+          },
+          "modifier": {
+            "type": "minecraft:set_count",
+            "count": {
+              "type": "voidmonster:difficulty_count",
+              "max": 6,
+              "min": 2
+            }
+          },
+          "name": "minecraft:emerald"
+        }
+      ],
+      "rolls": 1
+    },
+    {
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "condition": {
+            "type": "voidmonster:difficulty",
+            "minimum": 0.2
+          },
+          "modifier": {
+            "type": "minecraft:set_count",
+            "count": {
+              "type": "voidmonster:difficulty_count",
+              "max": 3,
+              "min": 1
+            }
+          },
+          "name": "minecraft:ender_pearl"
+        }
+      ],
+      "rolls": 1
+    },
+    {
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "condition": {
+            "type": "voidmonster:difficulty",
+            "minimum": 0.25
+          },
+          "modifier": {
+            "type": "minecraft:set_count",
+            "count": {
+              "type": "voidmonster:difficulty_count",
+              "max": 3,
+              "min": 1
+            }
+          },
+          "name": "minecraft:ender_eye"
+        }
+      ],
+      "rolls": 1
+    },
+    {
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "condition": {
+            "type": "voidmonster:difficulty",
+            "minimum": 0.0
+          },
+          "modifier": {
+            "type": "minecraft:set_count",
+            "count": {
+              "type": "voidmonster:difficulty_count",
+              "max": 8,
+              "min": 2
+            }
+          },
+          "name": "minecraft:fire_charge"
+        }
+      ],
+      "rolls": 1
+    },
+    {
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "condition": {
+            "type": "voidmonster:difficulty",
+            "minimum": 0.0
+          },
+          "modifier": {
+            "type": "minecraft:set_count",
+            "count": {
+              "type": "voidmonster:difficulty_count",
+              "max": 22,
+              "min": 8
+            }
+          },
+          "name": "minecraft:nether_wart"
+        }
+      ],
+      "rolls": 1
+    },
+    {
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "condition": {
+            "type": "voidmonster:difficulty",
+            "minimum": 1.0
+          },
+          "modifier": {
+            "type": "minecraft:set_count",
+            "count": {
+              "type": "voidmonster:difficulty_count",
+              "max": 2,
+              "min": 1
+            }
+          },
+          "name": "minecraft:nether_star"
+        }
+      ],
+      "rolls": 1
+    },
+    {
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "condition": {
+            "type": "voidmonster:difficulty",
+            "minimum": 0.6
+          },
+          "modifier": {
+            "type": "minecraft:set_count",
+            "count": {
+              "type": "voidmonster:difficulty_count",
+              "max": 16,
+              "min": 6
+            }
+          },
+          "name": "minecraft:obsidian"
+        }
+      ],
+      "rolls": 1
+    },
+    {
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "condition": {
+            "type": "voidmonster:difficulty",
+            "minimum": 0.3
+          },
+          "modifier": {
+            "type": "minecraft:set_count",
+            "count": {
+              "type": "voidmonster:difficulty_count",
+              "max": 12,
+              "min": 8
+            }
+          },
+          "name": "minecraft:gunpowder"
+        }
+      ],
+      "rolls": 1
+    },
+    {
+      "entries": [
+        {
+          "type": "voidmonster:enchanted_books"
+        }
+      ],
+      "rolls": 1
+    }
+  ],
+  "random_sequence": "voidmonster:entities/void_monster"
+}

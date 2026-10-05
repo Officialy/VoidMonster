@@ -223,3 +223,13 @@ pip-log.txt
 #Mr Developer
 .mr.developer.cfg
 *.rar
+
+!gradle.properties
+!src/main/resources/**/*.png
+!src/main/resources/**/*.ogg
+!src/main/resources/*.properties
+/run/
+/run-data/
+/run-client-data/
+/run-gametest/
+/run-gametest*/

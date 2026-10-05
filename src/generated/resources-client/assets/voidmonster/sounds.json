@@ -1,0 +1,10 @@
+{
+  "aura": {
+    "sounds": [
+      {
+        "type": "file",
+        "name": "voidmonster:aura3"
+      }
+    ]
+  }
+}

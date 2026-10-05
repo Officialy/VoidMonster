@@ -1,0 +1,25 @@
+dependencies {
+    implementation project(':DragonAPI')
+    compileOnly project(':RotaryCraft')
+    if (project.hasProperty('voidMonsterWithRotary')) runtimeOnly project(':RotaryCraft')
+}
+
+// The root-level files remain pristine upstream references. Modern sources live here.
+sourceSets.main.java.srcDirs = ['src/main/java']
+
+neoForge {
+    runs {
+        clientData { gameDirectory = file('run-client-data') }
+        serverData { gameDirectory = file('run-data') }
+        gameTest {
+            type = 'gameTestServer'
+            gameDirectory = file(project.hasProperty('voidMonsterTestDirectory')
+                    ? project.property('voidMonsterTestDirectory').toString() : 'run-gametest')
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            programArguments.addAll '--tests', project.hasProperty('gameTestSelector')
+                    ? project.property('gameTestSelector').toString() : 'voidmonster:*'
+        }
+    }
+}
+
+tasks.named('test', Test) { useJUnitPlatform() }
