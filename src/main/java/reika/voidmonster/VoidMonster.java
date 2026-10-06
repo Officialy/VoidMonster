@@ -54,7 +54,7 @@ public final class VoidMonster extends DragonAPIMod {
     public VoidMonster(IEventBus modBus, ModContainer container) {
         instance = this;
         startTiming(LoadProfiler.LoadPhase.PRELOAD);
-        container.registerConfig(ModConfig.Type.COMMON, config.spec, "Reika/VoidMonster.toml");
+        container.registerConfig(ModConfig.Type.LOCAL, config.spec, "Reika/VoidMonster.toml");
         modBus.addListener(this::commonSetup);
         modBus.addListener(this::configLoaded);
         modBus.addListener(this::configReloaded);
