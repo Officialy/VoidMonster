@@ -18,6 +18,7 @@ import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.resources.Identifier;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.client.event.RegisterRenderPipelinesEvent;
+import reika.dragonapi.extras.shader.IrisCompat;
 
 /** V33a's alpha-covered, unlit quads, with depth writes disabled. */
 public final class VoidRenderPipelines {
@@ -54,6 +55,10 @@ public final class VoidRenderPipelines {
             event.registerPipeline(FLARE);
             event.registerPipeline(GROWTH);
             event.registerPipeline(DISTORTION);
+            // Both sprites are alpha-textured, alpha-blended world quads: gbuffers_textured, which packs that override
+            // its blend set to alpha blending too. They stay out of the shadow map. DISTORTION runs after Iris composites.
+            IrisCompat.assignWithoutShadow(FLARE, "TEXTURED");
+            IrisCompat.assignWithoutShadow(GROWTH, "TEXTURED");
         });
     }
 }
