@@ -4,6 +4,6 @@
   "package": "reika.voidmonster.mixin",
   "compatibilityLevel": "JAVA_25",
   "mixins": ["GhostHealingPotionMixin"],
-  "client": ["VoidCameraMixin"],
+  "client": ["VoidCameraMixin", "VoidGuiDistortionMixin"],
   "injectors": {"defaultRequire": 1}
 }

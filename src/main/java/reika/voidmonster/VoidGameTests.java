@@ -60,7 +60,7 @@ public final class VoidGameTests {
     private VoidGameTests() {}
     public static void register(RegisterGameTestsEvent event) {
         Holder<TestEnvironmentDefinition<?>> environment = event.registerEnvironment(id("default"), new TestEnvironmentDefinition.AllOf(List.of()));
-        for (String name : List.of("normal_damage", "ghost_splash", "ghost_regeneration", "persistence", "loot", "light_event", "legacy_drop", "optional_rotary", "spawn_singleton", "admin_kill")) {
+        for (String name : List.of("normal_damage", "healing_window", "pursuit_speed", "ghost_splash", "ghost_regeneration", "persistence", "loot", "light_event", "legacy_drop", "optional_rotary", "spawn_singleton", "admin_kill")) {
             var data = new TestData<>(environment, VoidTestStructureProvider.ARENA, 40, 0, true, Rotation.NONE);
             event.registerTest(id(name), new Contract(data, name));
         }
@@ -100,6 +100,45 @@ public final class VoidGameTests {
         helper.assertTrue(ghost.getDamageCap(helper.getLevel().damageSources().playerAttack(owner), 100) == 0, "ghost ignores ordinary weapons");
         ghost.forcePersist = false;
         ghost.discard();
+        helper.succeed();
+    }
+
+    /** Exercise the real AI healing branch, then its damage gate at the end of the forty-tick burst. */
+    @SuppressWarnings("unchecked")
+    private static void healingWindow(GameTestHelper helper) {
+        var monster = monster(helper);
+        monster.setHealth(monster.getMaxHealth() - 50);
+        try {
+            var field = EntityVoidMonster.class.getDeclaredField("HEAL_TIME");
+            field.setAccessible(true);
+            var timer = (net.minecraft.network.syncher.EntityDataAccessor<Integer>)field.get(null);
+            monster.getEntityData().set(timer, 40);
+        } catch (ReflectiveOperationException exception) { throw new IllegalStateException(exception); }
+        var player = helper.makeMockPlayer(net.minecraft.world.level.GameType.CREATIVE);
+        var source = helper.getLevel().damageSources().playerAttack(player);
+        float health = monster.getHealth();
+        for (int tick = 0; tick < 40; tick++) {
+            helper.assertTrue(monster.isHealing(), "healing burst must last forty ticks");
+            helper.assertTrue(!monster.hurtServer(helper.getLevel(), source, 10), "even creative sword damage is blocked during healing");
+            monster.aiStep();
+        }
+        helper.assertTrue(Math.abs(monster.getHealth() - health - 10 * monster.getDifficulty()) < 0.001F,
+                "burst heals 0.25 health per tick times difficulty");
+        helper.assertTrue(!monster.isHealing(), "healing must stop after forty ticks");
+        helper.assertTrue(monster.hurtServer(helper.getLevel(), source, 10), "damage must resume between healing bursts");
+        helper.succeed();
+    }
+
+    private static void pursuitSpeed(GameTestHelper helper) {
+        var monster = monster(helper);
+        double previous = 0;
+        for (double distance : new double[] {8, 32, 128, 256}) {
+            monster.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
+            monster.moveTowards(monster.getX() + distance, monster.getY(), monster.getZ(), 1);
+            double speed = monster.getDeltaMovement().x;
+            helper.assertTrue(speed > previous, "V33a pursuit must accelerate across distance bands");
+            previous = speed;
+        }
         helper.succeed();
     }
     private static void ghostRegeneration(GameTestHelper helper) {
@@ -229,6 +268,8 @@ public final class VoidGameTests {
         @Override public void run(GameTestHelper helper) {
             switch (name) {
                 case "normal_damage" -> normalDamage(helper);
+                case "healing_window" -> healingWindow(helper);
+                case "pursuit_speed" -> pursuitSpeed(helper);
                 case "ghost_splash" -> ghostSplash(helper);
                 case "ghost_regeneration" -> ghostRegeneration(helper);
                 case "persistence" -> persistence(helper);

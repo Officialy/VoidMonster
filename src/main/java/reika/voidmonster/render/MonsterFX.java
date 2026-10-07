@@ -43,6 +43,7 @@ public final class MonsterFX {
     private static Vec3 focus;
     private static EntityVoidMonster focusMonster;
     private static MappableRingBuffer uniform;
+    private static Vector4f frameFocus;
     private static final RayTracer sight = RayTracer.getVisualLOS();
     private MonsterFX() {}
     public static boolean clearLOS(EntityVoidMonster monster) { return clearLOS(monster, 0); }
@@ -85,7 +86,9 @@ public final class MonsterFX {
     public static float rampFog(float original) {
         return (float)((3 + 5.5 * monsterDistance) * screenFactor + (1 - screenFactor) * original);
     }
-    public static void reset() { screenFactor = 0; focus = null; focusMonster = null; monsterDistance = 0; }
+    public static void reset() { screenFactor = 0; focus = null; focusMonster = null; monsterDistance = 0; frameFocus = null; }
+    /** GameRenderer starts a new frame, including frames with no world. */
+    public static void beginFrame() { frameFocus = null; }
     public static void afterLevel(RenderLevelStageEvent.AfterLevel event) {
         // A shadow render neither activates nor consumes the player's fade envelope.
         if (VoidShaderCompatibility.shadowPass()) return;
@@ -99,26 +102,32 @@ public final class MonsterFX {
             if (focusMonster != null && screenFactor > 0) {
                 focus = focusPosition(focusMonster, event.getLevelRenderState().worldPartialTicks);
                 monsterDistance = focusMonster.position().distanceTo(event.getLevelRenderState().cameraRenderState.pos);
-                render(event);
+                var camera = event.getLevelRenderState().cameraRenderState;
+                var point = new Vector4f((float)(focus.x - camera.pos.x), (float)(focus.y - camera.pos.y),
+                        (float)(focus.z - camera.pos.z), 1);
+                point.mul(event.getModelViewMatrix()).mul(camera.projectionMatrix);
+                if (MonsterScreenProjection.isOnScreen(point)) {
+                    frameFocus = new Vector4f(point.x / point.w * 0.5F + 0.5F,
+                            point.y / point.w * 0.5F + 0.5F, (float)monsterDistance, screenFactor);
+                }
             }
         } finally {
             screenFactor = Math.max(0, screenFactor - 0.0125F);
             if (screenFactor == 0) { focus = null; focusMonster = null; }
         }
     }
-    private static void render(RenderLevelStageEvent.AfterLevel event) {
+    /** Composite once after the GUI has drawn, so world, HUD and open screens share the warp. */
+    public static void afterGui() {
+        Vector4f point = frameFocus;
+        frameFocus = null;
+        if (point == null || VoidShaderCompatibility.shadowPass()) return;
         Minecraft mc = Minecraft.getInstance();
-        var camera = event.getLevelRenderState().cameraRenderState;
-        Vector4f point = new Vector4f((float)(focus.x - camera.pos.x), (float)(focus.y - camera.pos.y), (float)(focus.z - camera.pos.z), 1);
-        point.mul(event.getModelViewMatrix()).mul(camera.projectionMatrix);
-        if (!MonsterScreenProjection.isOnScreen(point)) return;
         PostChain chain = mc.getShaderManager().getPostChain(EFFECT, Set.of(PostChain.MAIN_TARGET_ID, WARPED));
         if (chain == null) return;
         if (uniform == null) uniform = new MappableRingBuffer(() -> "Void Monster distortion",
                 GpuBuffer.USAGE_MAP_WRITE | GpuBuffer.USAGE_UNIFORM, 16);
         try (var mapping = uniform.currentBuffer().map(false, true)) {
-            Std140Builder.intoBuffer(mapping.data()).putVec4(point.x / point.w * 0.5F + 0.5F,
-                    point.y / point.w * 0.5F + 0.5F, (float)monsterDistance, screenFactor);
+            Std140Builder.intoBuffer(mapping.data()).putVec4(point.x, point.y, point.z, point.w);
         }
         RenderTarget main = mc.gameRenderer.mainRenderTarget();
         FrameGraphBuilder frame = new FrameGraphBuilder();

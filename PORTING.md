@@ -208,3 +208,33 @@ validation completed the ten VM contracts but then hit the concurrently changing
 missing `BlockLaserEffector26.ROTATEABLE`. No dependency source/build allowlist was changed for this
 fix; the temporary dependency snapshot/init script lives only in root build/. Live reproduction of
 the user's screenshot after this patch, including Iris/Distant Horizons, is still required.
+
+
+## 2026-10-08 — Warp HUD/screens and verify combat parity
+
+MonsterFX now snapshots the visible projected focus after world rendering, then composites the
+single distortion pass after 26.3 GuiRenderer.endFrame. HUD, hotbar and open screens share the warp.
+GameRenderer begins each frame by clearing the pending focus, preventing a stale world warp on
+menu-only frames; the original visibility checks, shadow rejection and once-per-frame fade remain.
+The initial client smoke launch caught an incorrect GuiRenderer package in the mixin target;
+its verified 26.3 path is net.minecraft.client.gui.render.GuiRenderer.
+
+AI comparison with pristine Entity/EntityVoidMonster.java: main distance bands/pursuit motion,
+bait priority, creative-player drain exclusion, 50-tick successful-hit cooldown and two-block/tick
+retaliatory rush match. Healing starts randomly (1 in floor(80/difficulty) per non-healing damaged
+tick), runs 40 ticks at 0.25 health/tick times difficulty, and blocks incoming damage while active.
+There is no guaranteed minimum pause; the average waiting time is 80/difficulty ticks. Normal
+survival victims within six blocks also heal the monster by 2*difficulty health each drain tick;
+creative players are excluded. These mechanics can outpace repeated ordinary sword swings.
+
+All twelve native standalone contracts passed (new healing_window and pursuit_speed), with existing
+JUnit projection/world-policy cases passing/up-to-date. Log: root build/cliffs-void-validation.log.
+
+
+Final client validation: isolated full-family 26.3.0.51 run in a copied disposable save exited
+successfully (`build/cliffs-client-final.log`, CLIFFS_CLIENT_PASS). The inspected
+`build/cliffs-client-run/screenshots/cliffs-visuals.png` shows water at Y100 plus a falling stream,
+packed-ice textures on all icicle segments and flat ivy against its wall.
+`gui-before-warp.png` / `gui-after-warp.png` show an open screen's grid and text plus the tutorial
+overlay bending under the single post-GUI distortion pass. No Iris/Distant Horizons were loaded
+in this fixture; shader-pack compatibility is not claimed by this visual check.
