@@ -1,6 +1,8 @@
 dependencies {
     implementation project(':DragonAPI')
     compileOnly project(':RotaryCraft')
+    // Projection regressions use the same math library as Minecraft 26.3.
+    testImplementation 'org.joml:joml:1.10.9'
     if (project.hasProperty('voidMonsterWithRotary')) runtimeOnly project(':RotaryCraft')
 }
 

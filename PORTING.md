@@ -176,3 +176,35 @@ component companion; the temporary fixture was removed after validation. The let
 ChromatiCraft's active 26.3 module now implements the original corruption essence, bait, death fog,
 altar, Nether trap/Overworld destruction ritual and their native client/data integration. See
 [ChromatiCraft/PORTING.md](../ChromatiCraft/PORTING.md)'s compatibility entry for scope and tests.
+
+## Screen distortion lifetime and administrative removal — 2026-10-05
+
+Investigated the reported camera-following circular warp, strongest looking up and continuing after
+looking away/moving away. Native 26.3 entity extraction already respects the world frustum, but its
+bounding-box overlap can still admit an offscreen shader focus. MonsterFX also reprojected the last
+world-space focus during its fade without checking viewport bounds or updating its old distance.
+
+- Check finite homogeneous clip coordinates and the player's viewport before refreshing or drawing
+  the distortion. Behind-camera/offscreen focus cannot warp the view; the original visible-focus
+  GLSL, flare and per-frame fog/colour fade remain intact.
+- Track the actual client entity, update its interpolated focus and camera distance during the fade,
+  and clear state when that entity is removed/replaced or its level changes.
+- Query Iris's public `isRenderingShadowPass` API through an optional adapter. Shadow passes neither
+  activate the effect nor consume the player's fade. The installed Iris 1.11.7 API was checked locally.
+- `/kill` previously reached the ordinary non-player damage veto, so its apparent success could not
+  rule out a surviving monster. `minecraft:generic_kill` now delegates directly to native LivingEntity
+  damage handling before gameplay immunities; regular damage caps/healing/ghost immunity remain.
+
+Validation: three JOML 1.10.9 projection regressions (turning away, moving past the focus, invalid/near
+plane coordinates) pass, plus the existing 22 world-policy assertions. All **ten** native standalone
+server contracts pass, including administrative removal for normal and ghost forced-persistent monsters
+below minimum build height (`build/void-visual-fix-final-validation.log`). Native death animation may
+reserve the singleton slot until removal, as before.
+
+Both changed modules built successfully against RotaryCraft's complete 26.3 mob-radar validation jar
+(`build/void-visual-fix-validated-build.log`). Unmodified ordinary workspace compilation currently hits
+the independent PileDriverImpactEvent -> unported BlockEntityPileDriver reference. A later combined
+validation completed the ten VM contracts but then hit the concurrently changing Chroma laser model's
+missing `BlockLaserEffector26.ROTATEABLE`. No dependency source/build allowlist was changed for this
+fix; the temporary dependency snapshot/init script lives only in root build/. Live reproduction of
+the user's screenshot after this patch, including Iris/Distant Horizons, is still required.

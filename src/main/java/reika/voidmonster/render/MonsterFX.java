@@ -30,6 +30,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import org.joml.Vector4f;
+import org.joml.Matrix4f;
 import reika.voidmonster.entity.EntityVoidMonster;
 import reika.dragonapi.instantiable.RayTracer;
 
@@ -40,6 +41,7 @@ public final class MonsterFX {
     private static float screenFactor;
     private static double monsterDistance;
     private static Vec3 focus;
+    private static EntityVoidMonster focusMonster;
     private static MappableRingBuffer uniform;
     private static final RayTracer sight = RayTracer.getVisualLOS();
     private MonsterFX() {}
@@ -52,15 +54,29 @@ public final class MonsterFX {
         return sight.isClearLineOfSight(monster.level());
     }
     public static boolean markRendered(EntityVoidMonster monster, float partialTick) {
-        if (Minecraft.getInstance().level.getEntity(monster.getId()) != monster) return false;
+        if (VoidShaderCompatibility.shadowPass()) return false;
+        var mc = Minecraft.getInstance();
+        if (mc.level != monster.level() || mc.level.getEntity(monster.getId()) != monster) return false;
         if (!clearLOS(monster) && !clearLOS(monster, 1)) return false;
+        Vec3 nextFocus = focusPosition(monster, partialTick);
+        var camera = mc.gameRenderer.mainCamera();
+        Vec3 relative = nextFocus.subtract(camera.position());
+        var point = new Vector4f((float)relative.x, (float)relative.y, (float)relative.z, 1)
+                .mul(camera.getViewRotationProjectionMatrix(new Matrix4f()));
+        // Frustum overlap can admit the entity's bounding box while its shader
+        // focus is offscreen. Keep the flare, but do not refresh a global warp.
+        if (!MonsterScreenProjection.isOnScreen(point)) return true;
         screenFactor = Math.min(1, screenFactor + 0.05F);
+        focusMonster = monster;
+        focus = nextFocus;
+        monsterDistance = monster.position().distanceTo(camera.position());
+        return true;
+    }
+    private static Vec3 focusPosition(EntityVoidMonster monster, float partialTick) {
         // getScreenPos(0,0.5,0) was evaluated inside the preRender shell matrix:
         // inversion + (-1.5-scale/2) + scale*0.5 puts it exactly 1.5 above the entity.
         double death = Math.toRadians(deathRotation(monster, partialTick));
-        focus = monster.getPosition(partialTick).add(1.5 * Math.sin(death), 1.5 * Math.cos(death), 0);
-        monsterDistance = monster.position().distanceTo(Minecraft.getInstance().gameRenderer.mainCamera().position());
-        return true;
+        return monster.getPosition(partialTick).add(1.5 * Math.sin(death), 1.5 * Math.cos(death), 0);
     }
     public static float deathRotation(EntityVoidMonster monster, float partialTick) {
         return monster.deathTime > 0 ? 90 * Math.min(1, (float)Math.sqrt(Math.max(0, (monster.deathTime + partialTick - 1) / 20 * 1.6F))) : 0;
@@ -69,13 +85,25 @@ public final class MonsterFX {
     public static float rampFog(float original) {
         return (float)((3 + 5.5 * monsterDistance) * screenFactor + (1 - screenFactor) * original);
     }
-    public static void reset() { screenFactor = 0; focus = null; monsterDistance = 0; }
+    public static void reset() { screenFactor = 0; focus = null; focusMonster = null; monsterDistance = 0; }
     public static void afterLevel(RenderLevelStageEvent.AfterLevel event) {
+        // A shadow render neither activates nor consumes the player's fade envelope.
+        if (VoidShaderCompatibility.shadowPass()) return;
         try {
-            if (focus != null && screenFactor > 0) render(event);
+            var mc = Minecraft.getInstance();
+            if (focusMonster != null && (mc.level != focusMonster.level()
+                    || focusMonster.isRemoved() || mc.level.getEntity(focusMonster.getId()) != focusMonster)) {
+                reset();
+                return;
+            }
+            if (focusMonster != null && screenFactor > 0) {
+                focus = focusPosition(focusMonster, event.getLevelRenderState().worldPartialTicks);
+                monsterDistance = focusMonster.position().distanceTo(event.getLevelRenderState().cameraRenderState.pos);
+                render(event);
+            }
         } finally {
             screenFactor = Math.max(0, screenFactor - 0.0125F);
-            if (screenFactor == 0) focus = null;
+            if (screenFactor == 0) { focus = null; focusMonster = null; }
         }
     }
     private static void render(RenderLevelStageEvent.AfterLevel event) {
@@ -83,7 +111,7 @@ public final class MonsterFX {
         var camera = event.getLevelRenderState().cameraRenderState;
         Vector4f point = new Vector4f((float)(focus.x - camera.pos.x), (float)(focus.y - camera.pos.y), (float)(focus.z - camera.pos.z), 1);
         point.mul(event.getModelViewMatrix()).mul(camera.projectionMatrix);
-        if (point.w <= 0.0001F) return;
+        if (!MonsterScreenProjection.isOnScreen(point)) return;
         PostChain chain = mc.getShaderManager().getPostChain(EFFECT, Set.of(PostChain.MAIN_TARGET_ID, WARPED));
         if (chain == null) return;
         if (uniform == null) uniform = new MappableRingBuffer(() -> "Void Monster distortion",

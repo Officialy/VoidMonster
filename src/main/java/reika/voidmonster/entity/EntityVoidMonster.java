@@ -354,6 +354,9 @@ public class EntityVoidMonster extends Monster implements RayTracer.MultipointCh
     }
 
     @Override public boolean hurtServer(ServerLevel level, DamageSource source, float damage) {
+        // Administrative removal must bypass gameplay immunities, as it does for
+        // vanilla living entities. /kill has no player attacker to pass the cap.
+        if (source.is(DamageTypes.GENERIC_KILL)) return super.hurtServer(level, source, damage);
         boolean special = source instanceof GhostMonsterDamage || source instanceof VoidMonsterDamage;
         float cap = getDamageCap(source, damage);
         if (cap <= 0 || getY() < level.getMinY())

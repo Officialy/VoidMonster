@@ -9,16 +9,13 @@
  ******************************************************************************/
 package reika.voidmonster.world;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.FlatLevelSource;
 import net.neoforged.fml.loading.FMLEnvironment;
@@ -31,6 +28,10 @@ import reika.voidmonster.VoidMonster;
 import reika.voidmonster.VoidMonsterConfig;
 import reika.voidmonster.entity.EntityVoidMonster;
 import reika.voidmonster.registry.VoidEntities;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public final class MonsterGenerator {
     public static final MonsterGenerator instance = new MonsterGenerator();
@@ -56,7 +57,7 @@ public final class MonsterGenerator {
         EntityVoidMonster monster = VoidEntities.VOID_MONSTER.get().create(level, EntitySpawnReason.EVENT);
         if (monster == null)
             throw new IllegalStateException("Void Monster entity factory returned null");
-        if (level.environmentAttributes().getDimensionValue(EnvironmentAttributes.WATER_EVAPORATES))
+        if (level.environmentAttributes().getValue(EnvironmentAttributes.WATER_EVAPORATES, player.position()))
             monster.setNether();
         monster.snapTo(player.getX(), monster.isNetherVoid() ? level.getMaxY() + 5 : level.getMinY() - 10,
                 player.getZ(), 0, 0);

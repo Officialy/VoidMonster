@@ -60,7 +60,7 @@ public final class VoidGameTests {
     private VoidGameTests() {}
     public static void register(RegisterGameTestsEvent event) {
         Holder<TestEnvironmentDefinition<?>> environment = event.registerEnvironment(id("default"), new TestEnvironmentDefinition.AllOf(List.of()));
-        for (String name : List.of("normal_damage", "ghost_splash", "ghost_regeneration", "persistence", "loot", "light_event", "legacy_drop", "optional_rotary", "spawn_singleton")) {
+        for (String name : List.of("normal_damage", "ghost_splash", "ghost_regeneration", "persistence", "loot", "light_event", "legacy_drop", "optional_rotary", "spawn_singleton", "admin_kill")) {
             var data = new TestData<>(environment, VoidTestStructureProvider.ARENA, 40, 0, true, Rotation.NONE);
             event.registerTest(id(name), new Contract(data, name));
         }
@@ -206,6 +206,20 @@ public final class VoidGameTests {
         }
         helper.succeed();
     }
+    private static void adminKill(GameTestHelper helper) {
+        for (boolean ghost : new boolean[]{false, true}) {
+            var monster = monster(helper);
+            if (ghost) monster.setGhost();
+            monster.snapTo(monster.getX(), helper.getLevel().getMinY() - 10, monster.getZ(), 0, 0);
+            helper.getLevel().addFreshEntity(monster);
+            monster.kill(helper.getLevel());
+            helper.assertTrue(monster.isDeadOrDying(), "administrative kill bypasses ghost, below-world and forced-persistence protections");
+            monster.discard();
+            helper.assertTrue(monster.isRemoved(), "dead forced-persistent monster can be removed");
+            helper.assertTrue(!VoidMonster.getCurrentMonsterList(helper.getLevel()).contains(monster), "removed monster no longer holds the spawn slot");
+        }
+        helper.succeed();
+    }
     private static final class Contract extends GameTestInstance {
         static final MapCodec<Contract> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
                 TestData.CODEC.fieldOf("data").forGetter(test -> test.data), Codec.STRING.fieldOf("case").forGetter(test -> test.name)).apply(instance, Contract::new));
@@ -223,6 +237,7 @@ public final class VoidGameTests {
                 case "legacy_drop" -> legacyDrop(helper);
                 case "optional_rotary" -> optionalRotary(helper);
                 case "spawn_singleton" -> spawnSingleton(helper);
+                case "admin_kill" -> adminKill(helper);
                 default -> throw new IllegalArgumentException("Unknown Void Monster contract " + name);
             }
         }
