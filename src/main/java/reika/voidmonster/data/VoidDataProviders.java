@@ -29,7 +29,7 @@ public final class VoidDataProviders {
     }
     @SubscribeEvent public static void server(GatherDataEvent.Server event) {
         event.createProvider(VoidTestStructureProvider::new);
-        event.createWorldRegistryObjects(new RegistrySetBuilder().add(Registries.DAMAGE_TYPE, context -> {
+        event.getDefaultPackGenerator().createWorldRegistryObjects(new RegistrySetBuilder().add(Registries.DAMAGE_TYPE, context -> {
             context.register(VoidDamageTypes.VOID_MONSTER, new DamageType("voidmonster", DamageScaling.NEVER, 0));
             context.register(VoidDamageTypes.GHOST, new DamageType("voidmonster.ghost", DamageScaling.NEVER, 0));
         }));
@@ -42,6 +42,6 @@ public final class VoidDataProviders {
                 tag(DamageTypeTags.BYPASSES_ENCHANTMENTS).add(VoidDamageTypes.VOID_MONSTER);
             }
         });
-        event.createReloadableRegistryObjects(new RegistrySetBuilder().add(Registries.LOOT_TABLE, new VoidLootProvider()));
+        event.getDefaultPackGenerator().createReloadableRegistryObjects(new RegistrySetBuilder().add(Registries.LOOT_TABLE, new VoidLootProvider()));
     }
 }
