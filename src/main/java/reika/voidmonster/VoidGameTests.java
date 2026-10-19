@@ -90,7 +90,7 @@ public final class VoidGameTests {
     private static void ghostSplash(GameTestHelper helper) {
         var ghost = monster(helper).setGhost();
         helper.getLevel().addFreshEntity(ghost);
-        var owner = helper.makeMockServerPlayerInLevel();
+        var owner = reika.dragonapi.test.GameTestPlayers.joinedCreative(helper);
         ItemStack potion = new ItemStack(Items.SPLASH_POTION);
         potion.set(DataComponents.POTION_CONTENTS, new PotionContents(Potions.HEALING));
         var splash = new ThrownSplashPotion(helper.getLevel(), owner, potion);
@@ -220,7 +220,7 @@ public final class VoidGameTests {
         var resident = monster(helper).setNether();
         resident.snapTo(resident.getX(), level.getMaxY() + 5, resident.getZ(), 0, 0);
         level.addFreshEntity(resident);
-        var player = helper.makeMockServerPlayerInLevel();
+        var player = reika.dragonapi.test.GameTestPlayers.joinedCreative(helper);
         try {
             helper.assertTrue(resident.tickCount == 0, "resident has not ticked or registered itself");
             helper.assertTrue(VoidMonster.getCurrentMonsterList(level).contains(resident), "above-ceiling resident must count before its first tick");
